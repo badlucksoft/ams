@@ -20,6 +20,7 @@ private:
 public:
 	Person();
 	virtual ~Person();
+	json_t *toJSON(json_t *ROOT = NULL);
 };
 }
 }
