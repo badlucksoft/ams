@@ -98,6 +98,7 @@ bool Connection::bufferWaitingData()
 	uint64_t waitingData = this->dataWaiting();
 	if( waitingData > 0 && (this->bufferedDataLen + waitingData) < Connection::MAX_BUFFER_SIZE )
 	{
+		uint64_t receivedBytes = 0L;
 		if(this->buffer == NULL && this->bufferedDataLen == 0)
 		{
 			this->buffer = (unsigned char*)calloc(waitingData,1);
@@ -107,10 +108,12 @@ bool Connection::bufferWaitingData()
 		{
 			this->buffer = (unsigned char*)realloc(this->buffer,this->bufferedDataLen+waitingData);
 			memset(this->buffer+this->bufferedDataLen,0,waitingData);
-			this->bufferedDataLen += recv(this->socket,this->buffer+this->bufferedDataLen,waitingData,0);
+			receivedBytes = recv(this->socket,this->buffer+this->bufferedDataLen,waitingData,0);
+			this->bufferedDataLen += receivedBytes;
 		}
 		success = true;
 		printf("buffered %ld bytes (%ld total buffered)\n",waitingData,this->bufferedDataLen);
+		if( receivedBytes > 0) this->totalBytesReceived += receivedBytes;
 	}
 	return success;
 }

@@ -20,13 +20,70 @@ Key::Key() {
 Key::Key(json_t *KEY)
 {
 	this->init();
+	int32_t len = 0l;
+	json_t *item = json_object_get(KEY,"key_id");
+	if( item != NULL){
+		uuid_parse(json_string_value(item),this->key_id);
+		json_object_clear(item);
+	}
+	item = json_object_get(KEY,"name");
+	if( item != NULL && (len = json_string_length(item)) != 0)
+	{
+		this->name = (char*) calloc(len+1,1);
+		strncpy(this->name,json_string_value(item),len);
+		json_object_clear(item);
+	}
+	item = json_object_get(KEY,"email");
+	if( item != NULL && (len = json_string_length(item)) != 0)
+	{
+		len = json_string_length(item);
+		this->email = (char*) calloc(len+1,1);
+		strncpy(this->email,json_string_value(item),len);
+		json_object_clear(item);
+	}
+	item = json_object_get(KEY,"company");
+	if( item != NULL && (len = json_string_length(item)) != 0)
+	{
+		len = json_string_length(item);
+		this->company = (char*) calloc(len+1,1);
+		strncpy(this->company,json_string_value(item),len);
+		json_object_clear(item);
+	}
+	item = json_object_get(KEY,"description");
+	if( item != NULL && (len = json_string_length(item)) != 0)
+	{
+		len = json_string_length(item);
+		this->description = (char*) calloc(len+1,1);
+		strncpy(this->description,json_string_value(item),len);
+		json_object_clear(item);
+	}
+	item = json_object_get(KEY,"public_key");
+	if( item != NULL && (len = json_string_length(item)) != 0)
+	{
+		this->pubKeyLength = json_string_length(item);
+		this->pubKey = (unsigned char*) calloc(this->pubKeyLength+1,1);
+		strncpy((char*)this->pubKey,json_string_value(item),this->pubKeyLength);
+		json_object_clear(item);
+	}
+	item = json_object_get(KEY,"private_key");
+	if( item != NULL && (len = json_string_length(item)) != 0)
+	{
+		this->privKeyLength = json_string_length(item);
+		this->privKey = (unsigned char*) calloc(this->privKeyLength+1,1);
+		strncpy((char*)this->privKey,json_string_value(item),this->privKeyLength);
+		json_object_clear(item);
+	}
+	item = json_object_get(KEY,"creation_timestamp");
+	if( item != NULL)
+	{
+		this->creation_timestamp = json_integer_value(item);
+	}
 }
 Key::Key(const char *KEY)
 {
 	this->init();
 }
 Key::~Key() {
-	// TODO Auto-generated destructor stub
 	if (this->privKey != NULL && this->privKeyLength != 0) {
 		memset(this->privKey, 0, this->privKeyLength + 1);
 		free(this->privKey);
@@ -39,6 +96,31 @@ Key::~Key() {
 		this->pubKey = NULL;
 		this->pubKeyLength = 0;
 	}
+	if( this->name != NULL)
+	{
+		memset(this->name,0,strlen(this->name));
+		free(this->name);
+		this->name = NULL;
+	}
+	if( this->email != NULL)
+	{
+		memset(this->email,0,strlen(this->email));
+		free(this->email);
+		this->email = NULL;
+	}
+	if( this->company != NULL )
+	{
+		memset(this->company,0,strlen(this->company));
+		free(this->company);
+		this->company = NULL;
+	}
+	if( this->description != NULL)
+	{
+		memset(this->description,0,strlen(this->description));
+		free(this->description);
+		this->description = NULL;
+	}
+	this->creation_timestamp = 0L;
 	uuid_clear(this->key_id);
 }
 void Key::init(void) {
@@ -122,22 +204,37 @@ json_t *Key::toJSON(json_t *ROOT)
 	json_t *keyRoot = NULL;
 	if( ROOT != NULL) keyRoot = ROOT;
 	else keyRoot = json_object();
-	json_t *item = NULL;
-	json_t *keyObject = json_object();
-	json_object_set(keyRoot,"key",keyObject);
 	char keyID[37];
 	this->getKeyID(keyID);
-	json_object_set_new(keyObject,"key_id",json_stringn(keyID,36));
-	if( this->getName() != NULL)
-	{
-		json_object_set_new(keyObject,"name",json_stringn(this->getName(),strlen(this->getName())));
-	}
-	else json_object_set_new(keyObject,"name",json_null());
-	if( this->getEmail() != NULL)
-		json_object_set_new(keyObject,"email",json_stringn(this->getEmail(),strlen(this->getEmail())));
-	else
-		json_object_set_new(keyObject,"email",json_null());
+	json_object_set_new(keyRoot,"key_id",json_stringn(keyID,36));
+	json_object_set_new(keyRoot,"creation_timestamp",json_integer(this->creation_timestamp));
+	if( this->name == NULL) json_object_set_new(keyRoot,"name",json_null());
+	else json_object_set_new(keyRoot,"name",json_stringn(this->name,strlen(this->name)));
+	if( this->email == NULL) json_object_set_new(keyRoot,"email",json_null());
+	else json_object_set_new(keyRoot,"email",json_stringn(this->email,strlen(this->email)));
+	if( this->company == NULL) json_object_set_new(keyRoot,"company",json_null());
+	else json_object_set_new(keyRoot,"company",json_stringn(this->company,strlen(this->company)));
+	json_object_set_new(keyRoot,"public_key",json_stringn((char*)this->pubKey,this->pubKeyLength));
+	if( this->privKey != NULL) json_object_set_new(keyRoot,"private_key",json_stringn((char*)this->privKey,this->privKeyLength));
 	return keyRoot;
+}
+bool Key::publishPublicKey()
+{
+	bool success = false;
+	json_t *keyPackage = json_object(), *package = json_object();
+	char keyID[37];
+	this->getKeyID(keyID);
+	this->toJSON(keyPackage);
+	json_object_del(keyPackage,"private_key");
+	json_object_set_new(package,"command",json_stringn("publish_public_key",18));
+	json_object_set(package,"public_key",keyPackage);
+	char *packageString = json_dumps(package,JSON_COMPACT);
+	json_object_clear(keyPackage);
+	json_object_clear(package);
+	printf("public key package:\n%s\n",packageString);
+	memset(packageString,0,strlen(packageString)+1);
+	free(packageString);
+	return success;
 }
 Key *Key::generateKey(uint32_t KEY_BITS) {
 	Key *k = new Key();

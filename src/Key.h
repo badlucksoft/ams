@@ -34,8 +34,23 @@ private:
 	time_t creation_timestamp; //!< Unix timestamp from when the key was created.
 public:
 	Key(); //!< Default constructor
+	 /**
+	  * \brief JSON Constructor
+	  *
+	  * The JSON constructor can be used to restore a backed up key, but its more common use
+	  * will be to load or import a message recipient's public key.
+	  * @param KEY
+	  */
 	Key(json_t *KEY); //!< JSON Constructor
-	Key(const char *KEY); //!< UUID [String] Constructor
+	 /**
+	  * \brief  UUID [String] Constructor
+	  *
+	  * The UUID-string connector is for use in the mail client or special situations with servers
+	  * where a key database is kept. One such special situation is when a domain is configured for
+	  * shared keys, the public and private keys would be stored and secured on the server.
+	  * @param KEY
+	  */
+	Key(const char *KEY);
 	virtual ~Key();
 	char* getKeyID(char *KEYID);
 	char *getName();
@@ -49,6 +64,7 @@ public:
 	void setDescription(const char *DESCRIPTION, uint32_t LENGTH);
 	static Key* generateKey(uint32_t KEY_BITS = 2048L);
 	json_t *toJSON(json_t *ROOT = NULL);
+	bool publishPublicKey();
 };
 }
 }
