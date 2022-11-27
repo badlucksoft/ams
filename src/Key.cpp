@@ -27,14 +27,14 @@ Key::Key(json_t *KEY)
 		json_object_clear(item);
 	}
 	item = json_object_get(KEY,"name");
-	if( item != NULL && (len = json_string_length(item)) != 0)
+	if( item != NULL && (len = json_string_length(item)) > 0)
 	{
 		this->name = (char*) calloc(len+1,1);
 		strncpy(this->name,json_string_value(item),len);
 		json_object_clear(item);
 	}
 	item = json_object_get(KEY,"email");
-	if( item != NULL && (len = json_string_length(item)) != 0)
+	if( item != NULL && (len = json_string_length(item)) > 0)
 	{
 		len = json_string_length(item);
 		this->email = (char*) calloc(len+1,1);
@@ -42,7 +42,7 @@ Key::Key(json_t *KEY)
 		json_object_clear(item);
 	}
 	item = json_object_get(KEY,"company");
-	if( item != NULL && (len = json_string_length(item)) != 0)
+	if( item != NULL && (len = json_string_length(item)) > 0)
 	{
 		len = json_string_length(item);
 		this->company = (char*) calloc(len+1,1);
@@ -50,7 +50,7 @@ Key::Key(json_t *KEY)
 		json_object_clear(item);
 	}
 	item = json_object_get(KEY,"description");
-	if( item != NULL && (len = json_string_length(item)) != 0)
+	if( item != NULL && (len = json_string_length(item)) > 0)
 	{
 		len = json_string_length(item);
 		this->description = (char*) calloc(len+1,1);
@@ -58,7 +58,7 @@ Key::Key(json_t *KEY)
 		json_object_clear(item);
 	}
 	item = json_object_get(KEY,"public_key");
-	if( item != NULL && (len = json_string_length(item)) != 0)
+	if( item != NULL && (len = json_string_length(item)) > 0)
 	{
 		this->pubKeyLength = json_string_length(item);
 		this->pubKey = (unsigned char*) calloc(this->pubKeyLength+1,1);
@@ -66,7 +66,7 @@ Key::Key(json_t *KEY)
 		json_object_clear(item);
 	}
 	item = json_object_get(KEY,"private_key");
-	if( item != NULL && (len = json_string_length(item)) != 0)
+	if( item != NULL && (len = json_string_length(item)) > 0)
 	{
 		this->privKeyLength = json_string_length(item);
 		this->privKey = (unsigned char*) calloc(this->privKeyLength+1,1);
